@@ -16,38 +16,40 @@ const JobListings: React.FC = () => {
   const [location, setLocation] = useState('');
   const [error, setError] = useState('');
 
-  const fetchJobs = async (keyword: string, location: string) => {
-    setLoading(true);
-    setError('');
-    setJobs([]);
+const fetchJobs = async (keyword: string, location: string) => {
+  setLoading(true);
+  setError('');
+  setJobs([]);
 
-    try {
-      const url = `https://jsearch.p.rapidapi.com/search?query=${encodeURIComponent(
-        keyword
-      )}&location=${encodeURIComponent(location)}&page=1&num_pages=1`;
+  try {
+    const url = `https://jsearch.p.rapidapi.com/search?query=${encodeURIComponent(
+      keyword
+    )}&location=${encodeURIComponent(location)}&page=1&num_pages=1`;
 
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: {
-          'X-RapidAPI-Key': 'YOUR_API_KEY_HERE',
-          'X-RapidAPI-Host': 'jsearch.p.rapidapi.com',
-        },
-      });
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'x-rapidapi-key': '9ace7dcbdfmshf75a75a5fd326f0p187b95jsn33f3cc7b1216',
+        'x-rapidapi-host': 'jsearch.p.rapidapi.com',
+      },
+    });
 
-      const data = await response.json();
+    const data = await response.json();
+    console.log('API response:', data); // ✅ inspect this
 
-      if (data && data.data) {
-        setJobs(data.data);
-      } else {
-        setError('No jobs found.');
-      }
-    } catch (err) {
-      console.error(err);
-      setError('Failed to load jobs.');
-    } finally {
-      setLoading(false);
+    if (data && data.data) {
+      setJobs(data.data);
+    } else {
+      setError('No jobs found.');
     }
-  };
+  } catch (err: any) {
+    console.error('Fetch error:', err);
+    setError('Failed to load jobs. ' + (err.message || ''));
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const handleSearch = () => {
     if (!keyword.trim()) {
