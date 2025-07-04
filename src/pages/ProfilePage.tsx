@@ -1,8 +1,21 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import Navigation from '../components/Navigation';
-import { User, Mail, GraduationCap, Briefcase, School, Save, Trash2 } from 'lucide-react';
+import {
+  User,
+  Mail,
+  GraduationCap,
+  Briefcase,
+  School,
+  Save,
+  Trash2,
+} from 'lucide-react';
+
+import { auth, db } from '../firebase-config';
+import { doc, deleteDoc } from 'firebase/firestore';
+import { deleteUser } from 'firebase/auth';
+import { collection, getDocs } from 'firebase/firestore';
 
 const ProfilePage = () => {
   const navigate = useNavigate();
@@ -30,10 +43,32 @@ const ProfilePage = () => {
     setIsEditing(false);
   };
 
-  const handleDeleteAccount = () => {
-    deleteAccount();
+  const handleDeleteAccount = async () => {
+  if (!auth.currentUser) return;
+
+  try {
+    const userId = auth.currentUser.uid;
+
+    // 1. Delete all CVs in the user's subcollection
+    const cvCollectionRef = collection(db, 'users', userId, 'cvs');
+    const cvDocs = await getDocs(cvCollectionRef);
+    for (const docSnap of cvDocs.docs) {
+      await deleteDoc(doc(db, 'users', userId, 'cvs', docSnap.id));
+    }
+
+    // 2. Delete the user document in the 'users' collection
+    await deleteDoc(doc(db, 'users', userId));
+
+    // 3. Delete the authenticated user from Firebase Auth
+    await deleteUser(auth.currentUser);
+
+    // 4. Navigate home
     navigate('/');
-  };
+  } catch (error) {
+    console.error("Error deleting account:", error);
+    alert("Failed to delete account. Please try again.");
+  }
+};
 
   return (
     <div className="min-h-screen bg-gray-50">
